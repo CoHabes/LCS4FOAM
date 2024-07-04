@@ -64,6 +64,7 @@ SourceFiles
 #ifndef LCS_H
 #define LCS_H
 
+#include "fvMeshFunctionObject.H"
 #include "autoPtr.H"
 #include "volFields.H"
 #include "runTimeSelectionTables.H"
@@ -76,7 +77,7 @@ SourceFiles
 
 // include cfd2lcs functionalities
 extern "C" {
-#include "cfd2lcs_inc_dp.h"
+    #include "cfd2lcs_inc_dp.h"
 };
 
 
@@ -88,24 +89,26 @@ namespace Foam
 {
 
 // Forward declaration of classes
-class objectRegistry;
-class dictionary;
-class polyMesh;
-class mapPolyMesh;
+// class objectRegistry;
+// class dictionary;
+// class polyMesh;
+// class mapPolyMesh;
+
+namespace functionObjects
+{
 
 /*---------------------------------------------------------------------------*\
                    Class LCS Declaration
 \*---------------------------------------------------------------------------*/
 
 class LCS
+:
+    public fvMeshFunctionObject
 {
     // Private data
 
         //- Name of this set of LCS
         word name_;
-
-        //- Refererence to Db/mesh
-        const fvMesh& cfdMesh_;
 
         //- Pointer to const mesh which is used for lcs computations
         autoPtr<const fvMesh> lcsMeshPtr_;
@@ -116,7 +119,7 @@ class LCS
         //- Pointer to mesh to mesh interpolator
         autoPtr<meshToMesh> meshToMeshPtr_;
 
-        //- Pointer to lcs deignated lcs velocity if needed 
+        //- Pointer to lcs deignated lcs velocity if needed
         autoPtr<volVectorField> lcsVelFieldPtr_;
 
         //- Refererence to controlDict
@@ -152,7 +155,7 @@ class LCS
         label id_bkwd_;
 
         // Read from dictionary
-            
+
             //- If true use specified cellZone of oversetMesh for lcs computation
             Switch isOverset_;
 
@@ -184,7 +187,7 @@ class LCS
             //- LCS diagnostic integration time length
             scalar T_;
 
-            //- LCS output time interval 
+            //- LCS output time interval
             scalar H_;
 
             //- LCS options
@@ -199,7 +202,7 @@ class LCS
                 label integrator;
                 //- LCS interpolation scheme
                 label interpolator;
-                //- LCS CFL number 
+                //- LCS CFL number
                 scalar CFL;
 
                 // Member function to set options
@@ -216,7 +219,7 @@ class LCS
         void initializeLCSDiagnostics();
         void createLCSMesh();
         void createLCSSubsetMesh();
-        
+
         //- demand driven mesh to mesh interpolator
         const meshToMesh& meshToMeshInterp();
 
@@ -244,9 +247,8 @@ public:
         LCS
         (
             const word& name,
-            const objectRegistry&,
-            const dictionary&,
-            const bool loadFromFiles = false
+            const Time& runTime,
+            const dictionary& dict
         );
 
 
@@ -256,42 +258,26 @@ public:
 
     // Member Functions
 
-        //- Return name of the LCS
-        virtual const word& name() const
-        {
-            return name_;
-        }
-
-        //- start is called at the start of the time-loop
-        virtual bool start();
+        //- Initialize the function object at beginning of first execution
+        bool initialize();
 
         //- Read the LCS data
-        virtual void read(const dictionary&);
+        virtual bool read(const dictionary&);
 
         //- Execute
-        virtual void execute();
+        virtual bool execute();
 
         //- Execute at the final time-loop
-        virtual void end();
+        virtual bool end();
 
-        //- Called when time was set at the end of the Time::operator++
-        virtual void timeSet();
-
-        //- Write the LCS
-        virtual void write();
-
-        //- Update for changes of mesh
-        virtual void updateMesh(const mapPolyMesh&)
-        {}
-
-        //- Update for changes of mesh
-        virtual void movePoints(const pointField&)
-        {}
+        //- Write the result field
+        virtual bool write();
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

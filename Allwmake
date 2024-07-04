@@ -7,6 +7,4 @@ make FOR_OPENFOAM
 cd ../..
 
 # compile function object
-wmakeLnInclude LCSFunctionObject
-
 wmake libso LCSFunctionObject

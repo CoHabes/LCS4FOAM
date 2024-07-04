@@ -17,8 +17,8 @@ INC = I		#Include flag
 HDF5_SUPPORT = "FALSE"
 
 #MPI
-MPI_LIBS = -L${OPENMPI_LIB_DIR} -lmpi_cxx -lmpi -lmpi_usempif08 -lmpi_usempi_ignore_tkr -lmpi_mpifh
-MPI_INC = -$(INC)${OPENMPI_INCLUDE_DIR}
+MPI_LIBS = -L${MPI_ARCH_PATH} -lmpi_cxx -lmpi -lmpi_usempif08 -lmpi_usempi_ignore_tkr -lmpi_mpifh
+MPI_INC = -$(INC)${MPI_ARCH_PATH}/include
 
 #LAPACK
 LAPACK_LIBS =-L/usr/lib/x86_64-linux-gnu/lapack -llapack
@@ -32,7 +32,7 @@ endif
 
 #Link line and include path for all cfd2lcs dependencies.  Dont touch these.
 #Note that CFD2LCS_PREFIX here *should* get updated updated during default install
-CFD2LCS_PREFIX = /home/local/CSI/ch25xyte/foam/ch25xyte-4.1/lcsfunctionobject/LCSFunctionObject/libcfd2lcs
+CFD2LCS_PREFIX = /home/local/CSI/ch25xyte/OpenFOAM/ch25xyte-v2212/lcs4foam/LCSFunctionObject/libcfd2lcs
 CFD2LCS_SP_LIBS = -L$(CFD2LCS_PREFIX)/lib -lcfd2lcs_sp -lbspline_sp $(HDF5_LIBS) $(LAPACK_LIBS) $(MPI_LIBS)
 CFD2LCS_DP_LIBS = -L$(CFD2LCS_PREFIX)/lib -lcfd2lcs_dp -lbspline_dp $(HDF5_LIBS) $(LAPACK_LIBS) $(MPI_LIBS)
 CFD2LCS_INC = -$(INC)$(CFD2LCS_PREFIX)/include/

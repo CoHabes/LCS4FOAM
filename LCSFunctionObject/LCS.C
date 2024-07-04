@@ -32,39 +32,44 @@ License
 #include "wallPolyPatch.H"
 #include "emptyPolyPatch.H"
 #include "symmetryPolyPatch.H"
+#include "symmetryPlanePolyPatch.H"
 #include "wedgePolyPatch.H"
 #include "cyclicPolyPatch.H"
 #include "processorPolyPatch.H"
 #include "polyMesh.H"
 #include "block.H"
-#include "curvedEdgeList.H"
+#include "blockDescriptor.H"
+#include "addToRunTimeSelectionTable.H"
 #include <memory>
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
+namespace functionObjects
+{
     defineTypeNameAndDebug(LCS, 0);
+    addToRunTimeSelectionTable(functionObject, LCS, dictionary);
+}
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::LCS::LCS
+Foam::functionObjects::LCS::LCS
 (
     const word& name,
-    const objectRegistry& obr,
-    const dictionary& dict,
-    const bool loadFromFiles
+    const Time& runTime,
+    const dictionary& dict
 )
 :
+    fvMeshFunctionObject(name, runTime, dict),
     name_(name),
-    cfdMesh_(refCast<const fvMesh>(obr)),
     lcsMeshPtr_(nullptr),
     lcsMeshSubset_(nullptr),
     meshToMeshPtr_(nullptr),
     lcsVelFieldPtr_(nullptr),
-    controlDict_(obr.time().controlDict()),
+    controlDict_(time_.controlDict()),
     globalBb_(),
     localBb_(),
     active_(true),
@@ -90,7 +95,7 @@ Foam::LCS::LCS
     lcsOpts_()
 {
     // Check if the available mesh is an fvMesh, otherwise deactivate
-    if (!isA<fvMesh>(cfdMesh_))
+    if (!isA<fvMesh>(mesh_))
     {
         active_ = false;
         WarningInFunction
@@ -104,7 +109,7 @@ Foam::LCS::LCS
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::LCS::~LCS()
+Foam::functionObjects::LCS::~LCS()
 {
     if(x_){
         delete[] x_;
@@ -134,7 +139,7 @@ Foam::LCS::~LCS()
         delete[] flag_;
         flag_ = nullptr;
     }
-    
+
 
     /*
     delete[] y_;
@@ -144,7 +149,7 @@ Foam::LCS::~LCS()
     delete[] w_;
     delete[] flag_;
 
-    
+
     y_ = nullptr;
     z_ = nullptr;
     u_ = nullptr;
@@ -153,23 +158,23 @@ Foam::LCS::~LCS()
     flag_ = nullptr;
     */
 
-    
+
     if(!Pstream::parRun())
     {
         MPI_Finalize();
-    } 
+    }
 }
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-bool Foam::LCS::start()
+bool Foam::functionObjects::LCS::initialize()
 {
     if (active_)
     {
         Info << "-----libcfd2lcs initialisation -----------------------------------" << endl;
 
-        // Making serial run possible 
+        // Making serial run possible
         if(!Pstream::parRun())
         {
             MPI_Init(NULL, NULL);
@@ -181,7 +186,7 @@ bool Foam::LCS::start()
         // Set lcs mesh pointer
         if(isStaticRectLinear_)
         {
-            lcsMeshPtr_.set(&cfdMesh_);
+            lcsMeshPtr_.reset(&mesh_);
 
             if(isOverset_){
                 createLCSSubsetMesh();
@@ -199,7 +204,7 @@ bool Foam::LCS::start()
         // Compute number of grid points for THIS partition in x=i, y=j and z=k direction
         getNumberOfCellsInDirection();
 
-        // Compute cell offset of local mesh in respect to the global mesh 
+        // Compute cell offset of local mesh in respect to the global mesh
         getOffset();
 
         // Allocate space for data used by lcs library
@@ -211,7 +216,7 @@ bool Foam::LCS::start()
         w_ = new lcsdata_t[n_[0]*n_[1]*n_[2]];
         flag_ = new int[n_[0]*n_[1]*n_[2]];
 
-        // convert OpenFoam mesh cell centers to x,y,z arays 
+        // convert OpenFoam mesh cell centers to x,y,z arays
         // and set boundary type flags for each cell center
         getCellCenterCoords();
 
@@ -233,15 +238,15 @@ bool Foam::LCS::start()
     return true;
 }
 
-void Foam::LCS::read(const dictionary& dict)
-{   
+bool Foam::functionObjects::LCS::read(const dictionary& dict)
+{
     if (active_)
     {
         isOverset_ = dict.lookupOrDefault<Switch>("isOverset", false);
         if(isOverset_)
         {
             lcsOversetRegion_ = word(dict.lookup("lcsOversetRegion"));
-            Info << "LCSFunctionObject: Using cellZone " << lcsOversetRegion_ 
+            Info << "LCSFunctionObject: Using cellZone " << lcsOversetRegion_
                  <<" in oversetMesh for lcs computations\n" << endl;
         }
 
@@ -249,7 +254,7 @@ void Foam::LCS::read(const dictionary& dict)
         if((!isStaticRectLinear_) && isOverset_)
         {
             FatalErrorInFunction
-                << "a non static rectlinear zellZone can not be used in the oversetMesh for lcs computation.\n" 
+                << "a non static rectlinear zellZone can not be used in the oversetMesh for lcs computation.\n"
                 << "set isStaticRectLinear to true or do not use an oversetMesh"
                 << exit(FatalError);
         }else if(isStaticRectLinear_ && !isOverset_)
@@ -283,9 +288,9 @@ void Foam::LCS::read(const dictionary& dict)
 
         T_ = readScalar(dict.lookup("lcsIntegrationTime"));
 
-        // determine default value for LCS output time interval 
+        // determine default value for LCS output time interval
         scalar simulationWriteTimeInterval = 1.0f;
-        word writeControl = controlDict_.lookup("writeControl");
+        word writeControl(controlDict_.lookup("writeControl"));
         if(writeControl == "runTime" || writeControl == "adjustableRunTime" ){
             simulationWriteTimeInterval = readScalar(controlDict_.lookup("writeInterval"));
         }else if(writeControl == "timeStep"){
@@ -293,7 +298,7 @@ void Foam::LCS::read(const dictionary& dict)
             if(adjustTimeStep){
                 WarningInFunction
                     << "Adjustable simulation time steps with "
-                    << "timeStep writeControl is not support with LCS diagnostics." << nl 
+                    << "timeStep writeControl is not support with LCS diagnostics." << nl
                     << "If no lcsWriteInterval is provided lcsWriteTimeInterval is set to 1s"<< name_ << nl
                     << endl;
             }else{
@@ -303,28 +308,28 @@ void Foam::LCS::read(const dictionary& dict)
             }
         }else{
             WarningInFunction
-                << "cpuTime and clockTime writeControl is not support with LCS diagnostics." << nl 
+                << "cpuTime and clockTime writeControl is not support with LCS diagnostics." << nl
                 << "If no lcsWriteInterval is provided lcsWriteTimeInterval is set to 1s"<< name_ << nl
                 << endl;
         }
         H_ = dict.lookupOrDefault<scalar>("lcsSubStepWriteIntervall", simulationWriteTimeInterval);
 
         // read integrator - Maybe better with selectionTables, but this works for now
-        std::map<std::string, int> lcsIntegratorMap { 
-            {"euler", EULER}, 
-            {"trapezodial", TRAPEZOIDAL}, 
-            {"rk2", RK2}, 
-            {"rk3", RK3}, 
-            {"rk4", RK4} 
+        std::map<std::string, int> lcsIntegratorMap {
+            {"euler", EULER},
+            {"trapezodial", TRAPEZOIDAL},
+            {"rk2", RK2},
+            {"rk3", RK3},
+            {"rk4", RK4}
         };
-        word integrator = dict.lookup("integrator", "rk2");
+        word integrator = dict.lookupOrDefault<word>("integrator", "rk2");
         auto searchIntegrator = lcsIntegratorMap.find(integrator);
         if (searchIntegrator != lcsIntegratorMap.end()) {
             lcsOpts_.integrator = searchIntegrator->second;
         } else {
             WarningInFunction
-                << "LCS integrator " << integrator << "is no valid integration scheme for lcs diagnostic" << nl 
-                << "valid types are: euler, trapezodial, rk2, rk3, rk4. " << nl 
+                << "LCS integrator " << integrator << "is no valid integration scheme for lcs diagnostic" << nl
+                << "valid types are: euler, trapezodial, rk2, rk3, rk4. " << nl
                 << "Setting LCS integrator to rk2."<< name_ << nl
                 << endl;
             lcsOpts_.integrator = RK2;
@@ -332,12 +337,12 @@ void Foam::LCS::read(const dictionary& dict)
 
 
         // read interpolator - Maybe better with selectionTables, but this works for now
-        std::map<std::string, int> lcsInterpolatorMap { 
-            {"nearestNBR", NEAREST_NBR}, 
-            {"linear", LINEAR}, 
-            {"quadratic", QUADRATIC}, 
-            {"cubic", CUBIC}, 
-            {"tse", TSE}, 
+        std::map<std::string, int> lcsInterpolatorMap {
+            {"nearestNBR", NEAREST_NBR},
+            {"linear", LINEAR},
+            {"quadratic", QUADRATIC},
+            {"cubic", CUBIC},
+            {"tse", TSE},
             {"tseLimit", TSE_LIMIT}
             };
         word interpolator = dict.lookupOrDefault<word>("interpolator", "linear");
@@ -346,9 +351,9 @@ void Foam::LCS::read(const dictionary& dict)
             lcsOpts_.interpolator = searchInterpolator->second;
         } else {
             WarningInFunction
-                << "LCS interpolator " << interpolator 
-                << "is no valid interpolation scheme for lcs diagnostic." << nl 
-                << "Valid types are: nearestNBR, linear, quadratic, cubic, tse, tseLimit. " << nl 
+                << "LCS interpolator " << interpolator
+                << "is no valid interpolation scheme for lcs diagnostic." << nl
+                << "Valid types are: nearestNBR, linear, quadratic, cubic, tse, tseLimit. " << nl
                 << "Setting LCS interpolator to linear."<< name_ << nl
                 << endl;
             lcsOpts_.interpolator = LINEAR;
@@ -356,7 +361,7 @@ void Foam::LCS::read(const dictionary& dict)
 
         // read lcs CFl number
         lcsOpts_.CFL = dict.lookupOrDefault<scalar>("lcsCFL", 0.5f);
-        
+
         // read lcs options
         const dictionary& lcsOptionsDict = dict.subDict("lcsOptions");
         Switch synctimer = lcsOptionsDict.lookupOrDefault<Switch>("synctimer", false);
@@ -373,48 +378,50 @@ void Foam::LCS::read(const dictionary& dict)
         lcsOpts_.auxGrid = (auxGrid) ? LCS_TRUE : LCS_FALSE;
 
     }
+
+    return true;
 }
 
-void Foam::LCS::execute()
-{   
+bool Foam::functionObjects::LCS::execute()
+{
     if(firstExe_){
-        start();
+        initialize();
     }
 
-    scalar time = cfdMesh_.time().value();
+    scalar time = mesh_.time().value();
 
     if (active_ && time >= t_start_ && time <= t_end_)
-    {   
+    {
         getVelocityField();
         cfd2lcs_update_c(n_.data(), u_, v_, w_ ,time);
     }
+
+    return true;
 }
 
-void Foam::LCS::end()
+bool Foam::functionObjects::LCS::end()
 {
     if (id_fwd_ != -1)
     {
         cfd2lcs_diagnostic_destroy_c(id_fwd_);
         id_fwd_ = -1;
     }
-    
+
     if (id_bkwd_ != -1)
     {
         cfd2lcs_diagnostic_destroy_c(id_bkwd_);
         id_bkwd_ = -1;
     }
+
+    return true;
 }
 
-void Foam::LCS::timeSet()
+bool Foam::functionObjects::LCS::write()
 {
-  
+    return true;
 }
 
-void Foam::LCS::write()
-{
-}
-
-void Foam::LCS::readGlobalN()
+void Foam::functionObjects::LCS::readGlobalN()
 {
     word regionName;
     fileName polyMeshDir;
@@ -438,9 +445,8 @@ void Foam::LCS::readGlobalN()
         IOobject
         (
             "blockMeshDict",
-            cfdMesh_.time().constant(),
-            polyMeshDir,
-            cfdMesh_.time(),
+            time_.caseSystem(),
+            time_,
             IOobject::MUST_READ,
             IOobject::NO_WRITE,
             false
@@ -451,9 +457,13 @@ void Foam::LCS::readGlobalN()
     //- needed for block constructor
     pointField blockPointField(meshDict.lookup("vertices"));
 
-    //- Empty list of curved edges
+    //- Empty list of block edges and faces
     //- Needed for block constructor
-    curvedEdgeList edges;
+    blockEdgeList edges;
+    blockFaceList faces;
+
+    //- Block index
+    label index = 0;
 
     //- Blocks input stream
     ITstream& is(meshDict.lookup("blocks"));
@@ -484,8 +494,11 @@ void Foam::LCS::readGlobalN()
         is.putBack(lastToken);
         block meshblock
         (
+            meshDict,
+            index++,
             blockPointField,
             edges,
+            faces,
             is
         );
 
@@ -496,25 +509,25 @@ void Foam::LCS::readGlobalN()
         }
         else
         {
-            Vector<label> globalNv = meshblock.meshDensity();
+            Vector<label> globalNv = meshblock.density();
 
             globalN_.clear();
             globalN_.append(globalNv.x());
             globalN_.append(globalNv.y());
-            globalN_.append(globalNv.z()); 
+            globalN_.append(globalNv.z());
         }
-        
-        
+
+
         is >> lastToken;
     }
     is.putBack(lastToken);
 
     // Read end of blocks
-    is.readEnd("blocks"); 
+    is.readEnd("blocks");
 }
 
-void Foam::LCS::getBoundBoxes()
-{   
+void Foam::functionObjects::LCS::getBoundBoxes()
+{
     if(!isOverset_){
         globalBb_ = lcsMeshPtr_().bounds();
         localBb_ = boundBox(lcsMeshPtr_().points(), false);
@@ -528,11 +541,11 @@ void Foam::LCS::getBoundBoxes()
     Pout<< "local bounding box:" << localBb_ << endl;
 }
 
-void Foam::LCS::getCellCenterCoords()
+void Foam::functionObjects::LCS::getCellCenterCoords()
 {
     // Cell centroid coordinates
-    const vectorField& centres = (!isOverset_) ? 
-                                 lcsMeshPtr_().C().internalField() : 
+    const vectorField& centres = (!isOverset_) ?
+                                 lcsMeshPtr_().C().internalField() :
                                  lcsMeshSubset_().subMesh().C().internalField();
 
     // Loop over cell centres
@@ -544,9 +557,9 @@ void Foam::LCS::getCellCenterCoords()
         //set all cells als internal
         flag_[celli] = LCS_INTERNAL;
     }
-    
-    const polyBoundaryMesh& boundaryMesh = (!isOverset_) ? 
-                                           lcsMeshPtr_().boundaryMesh(): 
+
+    const polyBoundaryMesh& boundaryMesh = (!isOverset_) ?
+                                           lcsMeshPtr_().boundaryMesh():
                                            lcsMeshSubset_().subMesh().boundaryMesh();
 
     // Loop over all boundary patches
@@ -556,13 +569,15 @@ void Foam::LCS::getCellCenterCoords()
         const polyPatch& pp = boundaryMesh[patchi];
         // const word& patchName = pp.name();
 
+        Info << "polyPatch type " << pp.type() <<endl;
+
         // Velocity field
         // const volVectorField& U = lcsMeshPtr_().lookupObject<volVectorField>(uName_);
         // const fvPatchVectorField& U_p = U.boundaryField()[patchi];
 
         // determine boundary type
         label boundaryType = LCS_OUTFLOW;
-        
+
         if (isA<wallPolyPatch>(pp))
         {
             boundaryType = LCS_SLIP;
@@ -577,6 +592,7 @@ void Foam::LCS::getCellCenterCoords()
         (
             isA<emptyPolyPatch>(pp)
             || isA<symmetryPolyPatch>(pp)
+            || isA<symmetryPlanePolyPatch>(pp)
             || isA<wedgePolyPatch>(pp)
             || isA<cyclicPolyPatch>(pp)
             || isA<processorPolyPatch>(pp)
@@ -584,7 +600,7 @@ void Foam::LCS::getCellCenterCoords()
         {
             boundaryType = LCS_INTERNAL;
         }
-        
+
         // Loop over all faces of boundary patch
         forAll(boundaryMesh[patchi], facei)
         {
@@ -599,35 +615,35 @@ void Foam::LCS::getCellCenterCoords()
     }
 }
 
-void Foam::LCS::getVelocityField()
+void Foam::functionObjects::LCS::getVelocityField()
 {
     Info << "get velocity field" << endl;
     // pointer to const velocity field that is used for lcs computations
     std::shared_ptr<const vectorField> uLcsInPtr;
 
-    if (cfdMesh_.foundObject<volVectorField>(uName_))
-    {   
-        const volVectorField& uCfd = cfdMesh_.lookupObject<volVectorField>(uName_);
+    if (mesh_.foundObject<volVectorField>(uName_))
+    {
+        const volVectorField& uCfd = mesh_.lookupObject<volVectorField>(uName_);
         //uLcsInPtr.reset(&uCfd.internalField());
 
         if (isOverset_)
         {
-            // map velocity field from global overSetMesh to subsetMesh 
+            // map velocity field from global overSetMesh to subsetMesh
             // which is used for the lcs computation
             uLcsInPtr.reset();
             uLcsInPtr = std::make_shared<const vectorField>(lcsMeshSubset_->interpolate(uCfd)().internalField());
 
         }
         else if(!isStaticRectLinear_)
-        {   
+        {
             volVectorField& uLCS = lcsVelField();
 
             // interpolate cfd velocity field to lcs velocity field
-            meshToMeshInterp().interpolate
+            meshToMeshInterp().mapSrcToTgt
             (
-                uLCS,
-                uCfd,
-                meshToMesh::INTERPOLATE
+                uCfd.primitiveField(),
+                plusEqOp<vector>(),
+                uLCS.primitiveFieldRef()
             );
 
             uLcsInPtr.reset();
@@ -653,43 +669,43 @@ void Foam::LCS::getVelocityField()
     }else{
         FatalErrorIn
         (
-            "Foam::LCS::getVelocityField()"
+            "Foam::functionObjects::LCS::getVelocityField()"
         )   << "Velocity field with name " << uName_ << " not found"
             << exit(FatalError);
     }
 }
 
-void Foam::LCS::getNumberOfCellsInDirection()
+void Foam::functionObjects::LCS::getNumberOfCellsInDirection()
 {
     n_.setSize(3);
     // Assuming that LCS mesh has constant cell size along each axis
-    n_[0] = round(globalN_[0] * (localBb_.max().component(0) - localBb_.min().component(0)) / 
+    n_[0] = round(globalN_[0] * (localBb_.max().component(0) - localBb_.min().component(0)) /
             (globalBb_.max().component(0) - globalBb_.min().component(0)));
-    n_[1] = round(globalN_[1] * (localBb_.max().component(1) - localBb_.min().component(1)) / 
+    n_[1] = round(globalN_[1] * (localBb_.max().component(1) - localBb_.min().component(1)) /
             (globalBb_.max().component(1) - globalBb_.min().component(1)));
-    n_[2] = round(globalN_[2] * (localBb_.max().component(2) - localBb_.min().component(2)) / 
+    n_[2] = round(globalN_[2] * (localBb_.max().component(2) - localBb_.min().component(2)) /
             (globalBb_.max().component(2) - globalBb_.min().component(2)));
 
     Pout<< "Number of cells in x:" << n_[0] << " y:" << n_[1] << " z:" << n_[2]  << endl;
 
 }
 
-void Foam::LCS::getOffset()
+void Foam::functionObjects::LCS::getOffset()
 {
     offset_.setSize(3);
     // Assuming that LCS mesh has constant cell size along each axis
-    offset_[0] = round(n_[0] * (localBb_.min().component(0) - globalBb_.min().component(0)) / 
+    offset_[0] = round(n_[0] * (localBb_.min().component(0) - globalBb_.min().component(0)) /
                  (localBb_.max().component(0) - localBb_.min().component(0)));
-    offset_[1] = round(n_[1] * (localBb_.min().component(1) - globalBb_.min().component(1)) / 
+    offset_[1] = round(n_[1] * (localBb_.min().component(1) - globalBb_.min().component(1)) /
                  (localBb_.max().component(1) - localBb_.min().component(1)));
-    offset_[2] = round(n_[2] * (localBb_.min().component(2) - globalBb_.min().component(2)) / 
+    offset_[2] = round(n_[2] * (localBb_.min().component(2) - globalBb_.min().component(2)) /
                  (localBb_.max().component(2) - localBb_.min().component(2)));
 
     Pout<< "Offset in x:" << offset_[0] << " y:" << offset_[1] << " z:" << offset_[2]  << endl;
 
 }
 
-void Foam::LCS::initializeLCSDiagnostics()
+void Foam::functionObjects::LCS::initializeLCSDiagnostics()
 {
     if(ftleFwd_){
         char labelfwd[LCS_NAMELEN]="fwdFTLE";
@@ -699,10 +715,10 @@ void Foam::LCS::initializeLCSDiagnostics()
     if(ftleBkwd_){
         char labelbkwd[LCS_NAMELEN]="bkwdFTLE";
         id_bkwd_ = cfd2lcs_diagnostic_init_c(FTLE_BKWD, res_, T_, H_, labelbkwd);
-    } 
+    }
 }
 
-void Foam::LCS::lcsOpts::setLCSoptions()
+void Foam::functionObjects::LCS::lcsOpts::setLCSoptions()
 {
     char option1[] = "SYNCTIMER";
     cfd2lcs_set_option_c(option1, synctimer);
@@ -712,7 +728,7 @@ void Foam::LCS::lcsOpts::setLCSoptions()
 
     char option3[] = "WRITE_FLOWMAP";
     cfd2lcs_set_option_c(option3, writeFlowmap);
- 
+
     char option4[] = "WRITE_BCFLAG";
     cfd2lcs_set_option_c(option4, writeBCFalgs);
 
@@ -732,18 +748,18 @@ void Foam::LCS::lcsOpts::setLCSoptions()
     cfd2lcs_set_param_c(option9, CFL);
 }
 
-void Foam::LCS::createLCSMesh()
+void Foam::functionObjects::LCS::createLCSMesh()
 {
     //- designated lcs mesh
-    lcsMeshPtr_.set
+    lcsMeshPtr_.reset
     (
         new fvMesh
         (
             IOobject
             (
                 "LCS",
-                cfdMesh_.time().timeName(),
-                cfdMesh_.time(),
+                mesh_.time().timeName(),
+                mesh_.time(),
                 IOobject::MUST_READ
             )
         )
@@ -752,17 +768,18 @@ void Foam::LCS::createLCSMesh()
     Info << "Created LCS Mesh" << endl;
 }
 
-Foam::volVectorField& Foam::LCS::lcsVelField()
+Foam::volVectorField& Foam::functionObjects::LCS::lcsVelField()
 {
-    if(lcsVelFieldPtr_.empty()){
-        lcsVelFieldPtr_.set
+    if(!lcsVelFieldPtr_.good())
+    {
+        lcsVelFieldPtr_.reset
         (
             new volVectorField
             (
                 IOobject
                 (
                     "U",
-                    cfdMesh_.time().timeName(),
+                    mesh_.time().timeName(),
                     lcsMeshPtr_(),
                     IOobject::NO_READ,
                     IOobject::NO_WRITE
@@ -773,51 +790,46 @@ Foam::volVectorField& Foam::LCS::lcsVelField()
         );
     }
     return lcsVelFieldPtr_();
-    
+
 }
 
-const Foam::meshToMesh& Foam::LCS::meshToMeshInterp()
+const Foam::meshToMesh& Foam::functionObjects::LCS::meshToMeshInterp()
 {
-    if (meshToMeshPtr_.empty())
-    {   
+    if (!meshToMeshPtr_.good())
+    {
         // TODO: make interpolation for inconsistent meshes possible
         // for now only consistent meshes
         HashTable<word> patchMap;
         wordList cuttingPatches;
 
-        meshToMeshPtr_.set
+        meshToMeshPtr_.reset
         (
             new meshToMesh
             (
-                cfdMesh_,
+                mesh_,
                 lcsMeshPtr_(),
+                meshToMesh::interpolationMethod::imCorrectedCellVolumeWeight,
                 patchMap,
                 cuttingPatches
             )
         );
     }
-    
+
     return meshToMeshPtr_();
 }
 
-void Foam::LCS::createLCSSubsetMesh()
+void Foam::functionObjects::LCS::createLCSSubsetMesh()
 {
-    lcsMeshSubset_.set
+    cellSet lcsRegionSet(lcsMeshPtr_(), lcsOversetRegion_);
+    lcsMeshSubset_.reset
     (
         new fvMeshSubset
         (
-            IOobject
-            (
-                "set",
-                cfdMesh_.time().timeName(),
-                lcsMeshPtr_(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            lcsMeshPtr_()
+            lcsMeshPtr_(),
+            lcsRegionSet,
+            -1,
+            true
         )
     );
-    cellSet lcsRegionSet(lcsMeshPtr_(), lcsOversetRegion_);
-    lcsMeshSubset_().setLargeCellSubset(lcsRegionSet, -1, true);
 }
 // ************************************************************************* //
