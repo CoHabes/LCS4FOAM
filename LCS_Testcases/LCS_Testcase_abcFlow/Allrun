@@ -4,6 +4,6 @@
 
 compileApplication abcFlow
 runApplication blockMesh
-runApplication decomposePar
+runApplication decomposePar -constant
 
 mpirun -np 2 abcFlow -parallel > log.abcFlow

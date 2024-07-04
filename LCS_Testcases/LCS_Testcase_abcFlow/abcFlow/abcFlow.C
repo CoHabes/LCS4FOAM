@@ -64,8 +64,8 @@ int main(int argc, char *argv[])
 
         dimensionedScalar mDBs = dimensionedScalar("mDBs", dimensionSet(0,1,-1,0,0) ,1.0);
 
-        U = (mDBs*((ABC_A + ABC_D*Foam::sin(time))*sin(z) + ABC_C*cos(y)))  * dimensionedVector(vector(1,0,0)) 
-          + (mDBs*(ABC_B*sin(x) + (ABC_A+ABC_D*Foam::sin(time))*cos(z)))    * dimensionedVector(vector(0,1,0)) 
+        U = (mDBs*((ABC_A + ABC_D*Foam::sin(time))*sin(z) + ABC_C*cos(y)))  * dimensionedVector(vector(1,0,0))
+          + (mDBs*(ABC_B*sin(x) + (ABC_A+ABC_D*Foam::sin(time))*cos(z)))    * dimensionedVector(vector(0,1,0))
           + (mDBs*(ABC_C*sin(y) + ABC_B*cos(x)))                            * dimensionedVector(vector(0,0,1));
 
 
