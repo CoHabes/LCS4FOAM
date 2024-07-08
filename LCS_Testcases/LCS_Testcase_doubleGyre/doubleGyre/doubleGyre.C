@@ -69,8 +69,8 @@ int main(int argc, char *argv[])
         volScalarField fofxt = aoft*pow(x,2.0) + boft*x;
         volScalarField dfdx = 2.0*aoft*x + boft;
 
-        U = (mDBs*-M_PI*DG_A*sin((M_PI*fofxt))*cos((M_PI*y)))    * dimensionedVector(vector(1,0,0)) 
-          + (mDBs*M_PI*DG_A*cos((M_PI*fofxt))*sin((M_PI*y))*dfdx)* dimensionedVector(vector(0,1,0)) 
+        U = (mDBs*-M_PI*DG_A*sin((M_PI*fofxt))*cos((M_PI*y)))    * dimensionedVector(vector(1,0,0))
+          + (mDBs*M_PI*DG_A*cos((M_PI*fofxt))*sin((M_PI*y))*dfdx)* dimensionedVector(vector(0,1,0))
           + (mDBs*0.0)                                           * dimensionedVector(vector(0,0,1));
 
 

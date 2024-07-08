@@ -37,7 +37,7 @@ writeFormat     ascii;
 
 writePrecision  6;
 
-writeCompression uncompressed;
+writeCompression off;
 
 timeFormat      general;
 
@@ -51,11 +51,11 @@ functions
     {
         type            LCS;
         // Where to load it from (if not already in solver)
-        functionObjectLibs ("libLCSFunctionObject.so");
+        libs ("libLCSFunctionObject.so");
 
-        // Specifies if the main mesh is a static rectlinear Mesh 
+        // Specifies if the main mesh is a static rectlinear Mesh
         // (if yes the main cfd mesh is also used for the lcs computations)
-        // (if not a rectlinear LCS blockMesh has to be created under constant/LCS/polyMesh beforehand)  
+        // (if not a rectlinear LCS blockMesh has to be created under constant/LCS/polyMesh beforehand)
         isStaticRectLinear true;
 
         // Velocity field name
@@ -67,7 +67,7 @@ functions
         // LCS output and flow map sub-step interval in s - (default: simulation write time intervall)
         lcsSubStepWriteIntervall 1.5;
 
-        // Switches for FTLE field evaluation 
+        // Switches for FTLE field evaluation
         // - Forward time (repelling) FTLE field - (default: true/on)
         ftleFwd    on;
         // - Backward time (attracting) FTLE field - (default: false/off)
@@ -84,7 +84,7 @@ functions
         integrator      rk3;
 
         interpolator    linear;
-        
+
 
         // LCS Options
         lcsOptions

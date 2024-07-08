@@ -5,6 +5,6 @@
 compileApplication doubleGyre
 runApplication blockMesh
 
-runApplication decomposePar
+runApplication decomposePar -constant
 mpirun -np 8 doubleGyre -parallel
 # runApplication doubleGyre
