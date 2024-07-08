@@ -39,7 +39,6 @@ laplacianSchemes
 interpolationSchemes
 {
     default         linear;
-    interpolate(HbyA) linear;
 }
 
 snGradSchemes

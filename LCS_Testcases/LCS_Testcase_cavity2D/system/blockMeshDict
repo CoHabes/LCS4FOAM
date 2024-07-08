@@ -9,33 +9,68 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       polyBoundaryMesh;
-    location    "constant/polyMesh";
-    object      boundary;
+    class       dictionary;
+    object      blockMeshDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-3
+scale 0.1;
+
+vertices
+(
+    (0 0 0)
+    (1 0 0)
+    (1 1 0)
+    (0 1 0)
+    (0 0 0.1)
+    (1 0 0.1)
+    (1 1 0.1)
+    (0 1 0.1)
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) (60 60 1) simpleGrading (1 1 1)
+);
+
+edges
+(
+);
+
+boundary
 (
     movingWall
     {
-        type            wall;
-        nFaces          60;
-        startFace       7080;
+        type wall;
+        faces
+        (
+            (3 7 6 2)
+        );
     }
     fixedWalls
     {
-        type            wall;
-        nFaces          180;
-        startFace       7140;
+        type wall;
+        faces
+        (
+            (0 4 7 3)
+            (2 6 5 1)
+            (1 5 4 0)
+        );
     }
     frontAndBack
     {
-        type            empty;
-        nFaces          7200;
-        startFace       7320;
+        type empty;
+        faces
+        (
+            (0 3 2 1)
+            (4 5 6 7)
+        );
     }
-)
+);
+
+mergePatchPairs
+(
+);
 
 
 // ************************************************************************* //
