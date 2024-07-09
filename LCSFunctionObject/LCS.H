@@ -88,12 +88,6 @@ extern "C" {
 namespace Foam
 {
 
-// Forward declaration of classes
-// class objectRegistry;
-// class dictionary;
-// class polyMesh;
-// class mapPolyMesh;
-
 namespace functionObjects
 {
 
@@ -156,13 +150,16 @@ class LCS
 
         // Read from dictionary
 
-            //- If true use specified cellZone of oversetMesh for lcs computation
+            //- If true use specified cellZone of oversetMesh for
+            //  lcs computation
             Switch isOverset_;
 
-            //- Name of cellZone in oversetMesh which should be used for the lcs computation
+            //- Name of cellZone in oversetMesh which should be used for the
+            //  lcs computation
             word lcsOversetRegion_;
 
-            //- If true use cfd mesh for lcs computation, if false use extra lcs mesh
+            //- If true use cfd mesh for lcs computation, if false use extra
+            //  lcs mesh
             Switch isStaticRectLinear_;
 
             //- Number of grid points in global mesh
@@ -191,7 +188,8 @@ class LCS
             scalar H_;
 
             //- LCS options
-            struct lcsOpts {
+            struct lcsOpts
+            {
                 label synctimer;
                 label debug;
                 label writeFlowmap;
