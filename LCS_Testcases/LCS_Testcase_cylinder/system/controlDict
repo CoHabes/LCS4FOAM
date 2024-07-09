@@ -50,19 +50,17 @@ maxCo           1;
 
 maxDeltaT       0.1;
 
-// ************************************************************************* //
-
 functions
 {
 	lagrangianCoherentStructures
     {
         type            LCS;
         // Where to load it from (if not already in solver)
-        functionObjectLibs ("libLCSFunctionObject.so");
+        libs ("libLCSFunctionObject.so");
 
-        // Specifies if the main mesh is a static rectlinear Mesh 
+        // Specifies if the main mesh is a static rectlinear Mesh
         // (if yes the main cfd mesh is also used for the lcs computations)
-        // (if not a rectlinear LCS blockMesh has to be created under constant/LCS/polyMesh beforehand)  
+        // (if not a rectlinear LCS blockMesh has to be created under constant/LCS/polyMesh beforehand)
         isStaticRectLinear false;
 
         // Velocity field name
@@ -77,7 +75,7 @@ functions
         // LCS output and flow map sub-step interval in s - (default: simulation write time intervall)
         lcsSubStepWriteIntervall 1;
 
-        // Switches for FTLE field evaluation 
+        // Switches for FTLE field evaluation
         // - Forward time (repelling) FTLE field - (default: true/on)
         ftleFwd    on;
         // - Backward time (attracting) FTLE field - (default: false/off)
@@ -94,7 +92,7 @@ functions
         integrator      rk3;
 
         interpolator    linear;
-        
+
 
         // LCS Options
         lcsOptions
@@ -106,4 +104,5 @@ functions
             incompressible  on;
             auxGrid         off;
         }
-};
+    }
+}

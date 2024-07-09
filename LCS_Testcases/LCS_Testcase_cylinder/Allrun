@@ -4,14 +4,16 @@
 
 application="pimpleFoam"
 
+# copy results from the potentialFoam solver
 cp -r 0_potential 0
 #cp -r 0_org 0
+
 runApplication blockMesh
 runApplication renumberMesh -overwrite -noFunctionObjects
 
-runApplication -l log.blockMeshLCS blockMesh -region LCS
+runApplication -s LCS blockMesh -region LCS
 
 runApplication decomposePar
-runApplication -l log.decomposeParLCS decomposePar -region LCS
+runApplication -s LCS decomposePar -region LCS
 
 mpirun -np 2 $application -parallel > log.$application
