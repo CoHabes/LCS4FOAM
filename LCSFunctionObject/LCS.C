@@ -511,11 +511,6 @@ void Foam::functionObjects::LCS::readGlobalN()
 
     fileName dictPath = time_.system()/regionDir/dictName;
 
-    Info << time_.caseSystem() << endl;
-    Info << time_.system() << endl;
-    Info << regionDir << endl;
-    Info << dictName << endl;
-
     //- Read blockMeshDict of LCS mesh
     IOdictionary meshDict
     (
