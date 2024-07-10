@@ -15,6 +15,8 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+libs            (overset fvMotionSolvers);
+
 application icoOversetFoam;
 
 startFrom       startTime;
@@ -37,7 +39,7 @@ writeFormat     ascii;
 
 writePrecision  6;
 
-writeCompression uncompressed;
+writeCompression off;
 
 timeFormat      general;
 
@@ -45,26 +47,13 @@ timePrecision   6;
 
 runTimeModifiable yes;
 
-libs
-(
-    "libfoam.so"
-    "libmeshTools.so"
-    "libsurfMesh.so"
-    "libsampling.so"
-    "libdynamicMesh.so"
-    "liboversetMesh.so"
-    "liblduSolvers.so"
-);
-
-
-
 functions
-(
+{
     lagrangianCoherentStructures
     {
         type            LCS;
         // Where to load it from (if not already in solver)
-        functionObjectLibs ("libLCSFunctionObject.so");
+        libs ("libLCSFunctionObject.so");
 
         // Specifies if an oversetMesh is used for the simulation  - (default: startTime of simulation)
         isOverset true;
@@ -72,7 +61,7 @@ functions
         // (only needed if isOverset is true)
         lcsOversetRegion "refine";
 
-        // Specifies if the main mesh is a static rectlinear Mesh 
+        // Specifies if the main mesh is a static rectlinear Mesh
         // (if yes the main cfd mesh is also used for the lcs computations)
         // (if not a rectlinear LCS blockMesh has to be created under constant/LCS/polyMesh beforehand)
         // (MUST be true if isOverset is true)
@@ -93,7 +82,7 @@ functions
         // LCS output interval in s
         lcsWriteTimeIntervall 1;
 
-        // Switches for FTLE field evaluation 
+        // Switches for FTLE field evaluation
         // - Forward time (repelling) FTLE field - (default: true/on)
         ftleFwd    on;
         // - Backward time (attracting) FTLE field - (default: false/off)
@@ -110,7 +99,7 @@ functions
         integrator      rk3;
 
         interpolator    linear;
-        
+
         // LCS Options
         lcsOptions
         {
@@ -122,7 +111,7 @@ functions
             auxGrid         off;
         }
     }
-);
+}
 
 
 // ************************************************************************* //

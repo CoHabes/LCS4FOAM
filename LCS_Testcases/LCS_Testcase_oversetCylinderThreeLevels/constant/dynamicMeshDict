@@ -1,8 +1,8 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
-| \\      /  F ield         | foam-extend: Open Source CFD                    |
-|  \\    /   O peration     | Version:     4.1                                |
-|   \\  /    A nd           | Web:         http://www.foam-extend.org         |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2212                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -10,42 +10,19 @@ FoamFile
     version     2.0;
     format      ascii;
     class       dictionary;
-    location    "system";
-    object      fvSchemes;
+    object      dynamicMeshDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+dynamicFvMesh       dynamicOversetFvMesh;
 
-ddtSchemes
-{
-}
+motionSolverLibs (fvMotionSolvers);
 
-d2dt2Schemes
-{
-}
+solver          displacementLaplacian;
 
-interpolationSchemes
+displacementLaplacianCoeffs
 {
-}
-
-divSchemes
-{
-}
-
-gradSchemes
-{
-}
-
-snGradSchemes
-{
-}
-
-laplacianSchemes
-{
-}
-
-fluxRequired
-{
+    diffusivity     uniform 1;
 }
 
 

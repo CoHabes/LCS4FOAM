@@ -14,7 +14,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-convertToMeters 1;
+scale 1;
 
 vertices
 (
@@ -105,71 +105,102 @@ edges
     arc 23 20 (-4.242641 -4.242641 0.5)
 );
 
-patches
+boundary
 (
-    patch in
-    (
-        (0 4 7 3)
-    )
-    patch out
-    (
-        (2 6 5 1)
-    )
-    symmetryPlane top
-    (
-        (3 7 6 2)
-    )
-    symmetryPlane bottom
-    (
-        (1 5 4 0)
-    )
-    wall cylinder
-    (
-        (8 16 17 9)
-        (9 17 18 10)
-        (10 18 19 11)
-        (11 19 16 8)
-    )
+    outerCylinder
+    {
+        type        overset;
+        faces
+        (
+            (12 13 21 20)
+            (13 14 22 21)
+            (14 15 23 22)
+            (15 12 20 23)
+        );
+    }
 
-    patch outerCylinder
-    (
-        (12 13 21 20)
-        (13 14 22 21)
-        (14 15 23 22)
-        (15 12 20 23)
-    )
+    refine
+    {
+        type        overset;
+        faces
+        (
+            (24 28 31 27)
+            (26 30 29 25)
+            (27 31 30 26)
+            (25 29 28 24)
+        );
+    }
 
-    patch refine
-    (
-        (24 28 31 27)
-        (26 30 29 25)
-        (27 31 30 26)
-        (25 29 28 24)
-    )
+    in
+    {
+        type        patch;
+        faces
+        (
+            (0 4 7 3)
+        );
+    }
 
-    empty frontAndBack
-    (
-        (0 3 2 1)
-        (4 5 6 7)
+    out
+    {
+        type        patch;
+        faces
+        (
+            (2 6 5 1)
+        );
+    }
 
-        (8 9 13 12)
-        (9 10 14 13)
-        (10 11 15 14)
-        (11 8 12 15)
+    top
+    {
+        type        symmetryPlane;
+        faces
+        (
+            (3 7 6 2)
+        );
+    }
 
-        (16 20 21 17)
-        (17 21 22 18)
-        (18 22 23 19)
-        (19 23 20 16)
+    bottom
+    {
+        type        symmetryPlane;
+        faces
+        (
+            (1 5 4 0)
+        );
+    }
 
-        (24 27 26 25)
-        (28 29 30 31)
-    )
-);
+    cylinder
+    {
+        type        wall;
+        faces
+        (
+            (8 16 17 9)
+            (9 17 18 10)
+            (10 18 19 11)
+            (11 19 16 8)
+        );
+    }
 
+    frontAndBack
+    {
+        type        empty;
+        faces
+        (
+            (0 3 2 1)
+            (4 5 6 7)
 
-mergePatchPairs
-(
+            (8 9 13 12)
+            (9 10 14 13)
+            (10 11 15 14)
+            (11 8 12 15)
+
+            (16 20 21 17)
+            (17 21 22 18)
+            (18 22 23 19)
+            (19 23 20 16)
+
+            (24 27 26 25)
+            (28 29 30 31)
+        );
+    }
 );
 
 

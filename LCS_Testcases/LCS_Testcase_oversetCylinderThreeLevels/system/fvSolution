@@ -1,8 +1,8 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
-| \\      /  F ield         | foam-extend: Open Source CFD                    |
-|  \\    /   O peration     | Version:     4.1                                |
-|   \\  /    A nd           | Web:         http://www.foam-extend.org         |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2212                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -16,50 +16,91 @@ FoamFile
 
 solvers
 {
-    "p|pFinal"
+    cellDisplacement
     {
-        solver           BiCGStab;
-        preconditioner   DILU;
-
-//         solver           CG;
-//         preconditioner   DIC;
-
-//         minIter          1;
-        maxIter          1000;
-        tolerance        1e-7;
-        relTol           0;
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-06;
+        relTol          0;
+        maxIter         100;
     }
 
-    U
+    p
     {
-        solver           smoothSolver;
-        smoother         GaussSeidel;
-        nSweeps          1;
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-6;
+        relTol          0;
+    }
 
-//         solver           BiCGStab;
-//         preconditioner   DILU;
 
-//         minIter          1;
-        maxIter          1000;
-        tolerance        1e-7;
-        relTol           0;
+    pFinal
+    {
+        $p;
+        relTol          0;
+    }
+
+    pcorr
+    {
+        $pFinal;
+        solver          PCG;
+        preconditioner  DIC;
+    }
+
+    pcorrFinal
+    {
+        $pcorr;
+        relTol          0;
+    }
+
+    "(U|k|epsilon|omega)"
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-6;
+        relTol          0;
+    }
+
+    "(U|k|epsilon|omega)Final"
+    {
+        $U;
+        tolerance       1e-6;
+        relTol          0;
+    }
+
+    Phi
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-06;
+        relTol          0.01;
     }
 }
 
 
-SIMPLE
+PIMPLE
 {
-    pRefCell 0;
-    pRefValue 0;
+    momentumPredictor   false;
+    nOuterCorrectors    1;
+    nCorrectors         2;
+    nNonOrthogonalCorrectors 0;
 }
 
-
-PISO
+potentialFlow
 {
-    pRefCell 0;
-    pRefValue 0;
+    nNonOrthogonalCorrectors 3;
+    nCorrectors              3;
+}
 
-    nCorrectors 4;
+relaxationFactors
+{
+    fields
+    {
+    }
+    equations
+    {
+        ".*"           1;
+    }
 }
 
 

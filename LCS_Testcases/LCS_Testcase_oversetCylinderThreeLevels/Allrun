@@ -3,21 +3,19 @@
 . $WM_PROJECT_DIR/bin/tools/RunFunctions
 
 # Get application name
-application="icoOversetFoam"
+application="overPimpleDyMFoam"
 
-\cp -f blockMeshDict constant/polyMesh/blockMeshDict
-runApplication blockMesh
-\cp -f boundary constant/polyMesh/boundary
-runApplication setSet -noFunctionObjects -batch setBatch.batch
-\rm -f constant/polyMesh/sets/*_old constant/polyMesh/sets/*_old.gz
-runApplication setsToZones -noFunctionObjects
+# Create background mesh
+runApplication blockMesh -sets
 
-runApplication potentialOversetFoam -noFunctionObjects -writep
+restore0Dir
 
-# Run in serial
-#runApplication $application
+# Use cellSets to write zoneID
+runApplication setFields
+
+# Run potential foam to get some inital fields
+runApplication overPotentialFoam -noFunctionObjects -writep
 
 # Run in parallel
 runApplication decomposePar -cellDist
-runApplication decomposeSets -writeEmptySets
-runParallel $application 2
+mpirun -np 2 $application -parallel > log.$application
