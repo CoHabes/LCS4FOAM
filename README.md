@@ -15,22 +15,23 @@ This enables the OpenFOAM community to assess the geometry of the material trans
 
 ## In this repository
  - `LCSFunctionObject` :        Implementation of the function object
- - `LCSFunctionObject/libcfd2lcs`: Slightly modified thrid party library of [libcfd2lcs](https://github.com/justin-finn/libcfd2lcs)
+ - `LCSFunctionObject/libcfd2lcs` : Slightly modified thrid party library of [libcfd2lcs](https://github.com/justin-finn/libcfd2lcs)
  - `LCS_Testcases` : Testcases that show the application of the LCS function object
  - `Allwmake` : Make script for the compilation of the third party library and the function object
- - `Allwclean`: A script to undo the compilation
+ - `Allwclean` : A script to undo the compilation
 
 ## Installation
 ### Prerequisites:
 
-1. Working installation of foam-extend 4.1: For installing foam-extend 4.1 please refer to and follow the [installation instructions](https://openfoamwiki.net/index.php/Installation/Linux/foam-extend-4.1) step-by-step!
-    * [Installation/Linux/foam-extend-4.1/Ubuntu](https://openfoamwiki.net/index.php/Installation/Linux/foam-extend-4.1/Ubuntu)
-    * [Installation/Linux/foam-extend-4.1/CentOS](https://openfoamwiki.net/index.php/Installation/Linux/foam-extend-4.1/CentOS)
-2. liblapack
+1. Working installation of OpenFOAM-v2212: For installing OpenFOAM-v2212 please refer to the [OpenFOAM-v2212 Release Website](https://www.openfoam.com/news/main-news/openfoam-v2212).
+    * We are assuming that you are using OpenFOAM-v2212 together with your systems OpenMPI installation
+2. MPI Fortran compiler (mpif90)
+    * has only been testet with the mpif90 compiler that comes with Ubuntu 22.04 LTS and utilizes the underlying gfortran compiler of Ubuntu 22.04 LTS
+3. liblapack
     * Installable with the package manager of your choice e.g. `sudo apt-get install liblapack-dev`
  
 ### Compilation:
-With a working foam-extend 4.1 installation, clone the repository, source your foam environment and build the library:
+With a working OpenFOAM-v2212 installation, clone the repository, source your OpenFOAM environment and build the library:
 
 ```bash
 ./Allwmake
