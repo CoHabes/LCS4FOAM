@@ -4,3 +4,5 @@ set -x
 wcleanLnIncludeAll
 
 wclean libso LCSfunctionObject
+
+rm -f buildlog.*

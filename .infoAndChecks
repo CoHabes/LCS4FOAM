@@ -1,0 +1,135 @@
+#!/bin/bash
+#------------------------------------------------------------------------------
+
+# Information about the compilation process
+echo -en "
+
+${GREEN}Compilation of LCS4FOAM${NC}
+-------------------------------------------------------------------------------
+You are about to compile an OpenFOAM function object that allows you to compute
+finite-time Lyapunov exponent (FTLE) fields during your simulation.
+
+The compilation consists of two major steps
+    1. Compilation of the libcfd2lcs
+    2. Compilation of the OpenFOAM function object itself
+
+Before starting the compilation a few prerequisites will be checked:
+-------------------------------------------------------------------------------
+\n"
+
+#------------------------------------------------------------------------------
+
+# Check if fortran compiler is in place
+fortranLocation=`which gfortran`
+if command -v gfortran &>/dev/null
+then
+    echo -e  "\t- ${GREEN}Fortran compiler is in place${NC}"
+    echo -e  "\t  Located under ${fortranLocation}"
+
+else
+    echo -e  "\t- ${ORANGE}gfortran compiler not found."
+    echo -e  "\t  The compilation wont work without.${NC}"
+
+    echo -en  "Terminating compilation"
+    echo -e "\n\n"
+    exit
+fi
+
+# Check if mpif90 is in place
+mpifortranLocation=`which mpif90`
+if command -v mpif90 &>/dev/null
+then
+    echo -e  "\t- ${GREEN}MPI Fortran compiler is in place${NC}"
+    echo -e  "\t  Located under ${mpifortranLocation}"
+
+else
+    echo -e  "\t- ${ORANGE}mpif90 compiler not found."
+    echo -e  "\t  The compilation wont work without.${NC}"
+
+    echo -en  "Terminating compilation"
+    echo -e "\n\n"
+    exit
+fi
+
+liblapackLocation=`dpkg -L liblapack-dev | grep "liblapack.so" \
+                   | sed  's/^/\t  /'`
+
+if [ ! -z "$liblapackLocation" ]
+then
+    echo -e  "\t- ${GREEN}liblapack is in place${NC}"
+    echo -e  "\t  Located under"
+    echo -e  "${liblapackLocation}"
+
+else
+    echo -e  "\t- ${ORANGE}liblapack not found."
+    echo -e  "\t  The compilation wont work without.${NC}"
+
+    echo -en  "Terminating compilation"
+    echo -e "\n\n"
+    exit
+fi
+
+# Check the OpenFOAM version
+export foamESIVersion="OpenFOAM-v2212"
+
+userFoamVersion=`echo "$WM_PROJECT-$WM_PROJECT_VERSION"`
+
+if [ "$userFoamVersion" == "$foamESIVersion" ]
+then
+    echo -e  "\t- ${GREEN}$foamESIVersion is sourced${NC}"
+    echo -e  "\t  Located under ${WM_PROJECT_DIR}"
+
+else
+    echo -e  "\t- ${ORANGE}You have either not sourced any or not the correct "
+    echo -e  "\t  OpenFOAM version.${NC}"
+    echo -en "\t  The found version is ${ORANGE}$userFoamVersion${NC} "
+    echo -e  "and we need ${GREEN}$foamESIVersion${NC}\n"
+
+    while true
+    do
+        echo -en  "\t- Proceed with your OpenFOAM version (y/n): "
+        read proceed
+
+        if [ "$proceed" == "y" ]
+        then
+            break
+
+        elif [ "$proceed" == "n" ]
+        then
+            echo -e "\n\n"
+            exit
+
+        fi
+    done
+fi
+
+# Check the openMPI settings
+if [ "$WM_MPLIB" == "SYSTEMOPENMPI" ]
+then
+    echo -e  "\t- ${GREEN}You are using the systems OpenMPI installation.${NC}"
+    echo -e  "\t  Located under ${MPI_ARCH_PATH}"
+
+else
+    echo -e  "\t- ${ORANGE}You are not using the systems OpenMPI installation"
+    echo -e  "\t  but instead are using WM_MPLIB=${WM_MPLIB}${NC}"
+    echo -e  "\t  with openMPI being located under ${MPI_ARCH_PATH}"
+
+    while true
+    do
+        echo -en  "\t- Proceed with your OpenMPI version (y/n): "
+        read proceed
+
+        if [ "$proceed" == "y" ]
+        then
+            break
+
+        elif [ "$proceed" == "n" ]
+        then
+            echo -e "\n\n"
+            exit
+
+        fi
+    done
+fi
+
+#------------------------------------------------------------------------------
