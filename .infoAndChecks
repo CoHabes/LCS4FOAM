@@ -20,14 +20,16 @@ Before starting the compilation a few prerequisites will be checked:
 #------------------------------------------------------------------------------
 
 # Check if fortran compiler is in place
-fortranLocation=`which gfortran`
-if command -v gfortran &>/dev/null
+fortranVersions="gfortran gfortran-11"
+fortranLocation=`which $fortranVersions | sed  's/^/\t  /'`
+if command -v $fortranVersions &>/dev/null
 then
     echo -e  "\t- ${GREEN}Fortran compiler is in place${NC}"
-    echo -e  "\t  Located under ${fortranLocation}"
+    echo -e  "\t  Located under"
+    echo -e  "${fortranLocation}"
 
 else
-    echo -e  "\t- ${ORANGE}gfortran compiler not found."
+    echo -e  "\t- ${ORANGE}${fortranVersions} compiler not found."
     echo -e  "\t  The compilation wont work without.${NC}"
 
     echo -en  "Terminating compilation"
@@ -36,11 +38,12 @@ else
 fi
 
 # Check if mpif90 is in place
-mpifortranLocation=`which mpif90`
+mpifortranLocation=`which mpif90 | sed  's/^/\t  /'`
 if command -v mpif90 &>/dev/null
 then
     echo -e  "\t- ${GREEN}MPI Fortran compiler is in place${NC}"
-    echo -e  "\t  Located under ${mpifortranLocation}"
+    echo -e  "\t  Located under"
+    echo -e  "${mpifortranLocation}"
 
 else
     echo -e  "\t- ${ORANGE}mpif90 compiler not found."
@@ -77,7 +80,8 @@ userFoamVersion=`echo "$WM_PROJECT-$WM_PROJECT_VERSION"`
 if [ "$userFoamVersion" == "$foamESIVersion" ]
 then
     echo -e  "\t- ${GREEN}$foamESIVersion is sourced${NC}"
-    echo -e  "\t  Located under ${WM_PROJECT_DIR}"
+    echo -e  "\t  Located under"
+    echo -e  "\t  ${WM_PROJECT_DIR}"
 
 else
     echo -e  "\t- ${ORANGE}You have either not sourced any or not the correct "
@@ -107,7 +111,8 @@ fi
 if [ "$WM_MPLIB" == "SYSTEMOPENMPI" ]
 then
     echo -e  "\t- ${GREEN}You are using the systems OpenMPI installation.${NC}"
-    echo -e  "\t  Located under ${MPI_ARCH_PATH}"
+    echo -e  "\t  Located under"
+    echo -e  "\t  ${MPI_ARCH_PATH}"
 
 else
     echo -e  "\t- ${ORANGE}You are not using the systems OpenMPI installation"

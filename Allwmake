@@ -20,7 +20,7 @@ ${GREEN}1. Compilation of third party library libcfd2lcs${NC}
 -------------------------------------------------------------------------------
 "
 cd LCSFunctionObject/libcfd2lcs
-make FOR_OPENFOAM 2> ../../buildlog.libcfd2lcs
+make FOR_OPENFOAM |& tee ../../buildlog.libcfd2lcs
 cd ../..
 
 #------------------------------------------------------------------------------
@@ -31,4 +31,4 @@ echo -en "
 ${GREEN}2. Compilation of the function object${NC}
 -------------------------------------------------------------------------------
 "
-wmake libso LCSFunctionObject | tee buildlog.LCSFunctionObject
+wmake libso LCSFunctionObject |& tee buildlog.LCSFunctionObject
