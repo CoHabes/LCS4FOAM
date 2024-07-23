@@ -18,4 +18,4 @@ runApplication overPotentialFoam -noFunctionObjects -writep
 
 # Run in parallel
 runApplication decomposePar -cellDist
-mpirun -np 2 $application -parallel > log.$application
+mpirun -np 2 -oversubscribe $application -parallel > log.$application

@@ -16,4 +16,4 @@ runApplication -s LCS blockMesh -region LCS
 runApplication decomposePar
 runApplication -s LCS decomposePar -region LCS
 
-mpirun -np 2 $application -parallel > log.$application
+mpirun -np 2 -oversubscribe $application -parallel > log.$application

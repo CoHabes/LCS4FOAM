@@ -6,4 +6,4 @@ compileApplication abcFlow
 runApplication blockMesh
 runApplication decomposePar -constant
 
-mpirun -np 2 abcFlow -parallel > log.abcFlow
+mpirun -np 2 -oversubscribe abcFlow -parallel > log.abcFlow

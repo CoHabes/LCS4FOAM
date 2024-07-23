@@ -6,4 +6,4 @@ application="icoFoam"
 
 runApplication blockMesh
 runApplication decomposePar
-mpirun -np 2 $application -parallel > log.$application
+mpirun -np 2 -oversubscribe $application -parallel > log.$application

@@ -6,5 +6,4 @@ compileApplication doubleGyre
 runApplication blockMesh
 
 runApplication decomposePar -constant
-mpirun -np 8 doubleGyre -parallel
-# runApplication doubleGyre
+mpirun -np 8 -oversubscribe doubleGyre -parallel > log.doubleGyre
