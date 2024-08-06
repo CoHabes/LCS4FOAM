@@ -39,3 +39,5 @@ occurs in a barely laminar regime
 8. Select "Surface" as the "Representation" type of the data
 9. Select the "FTLE" field for the "Coloring" of the surface
 10. Depending on the selected LCS function object output options you may also be able to inspect the flow map fields "FM-X", "FM-Y", "FM-Z" and the velocity component fields "U-X", "U-Y", "U-Z"
+
+> **_NOTE:_**  In some cases LCS artifacts parallel to the boundaries can occur (LCS ridges with fairly small values). These are not physical and caused by the way the LCS are computed and how boundaries are handled. For visualization one can manually adjust the color map in paraView to get rid of these artifacts.
