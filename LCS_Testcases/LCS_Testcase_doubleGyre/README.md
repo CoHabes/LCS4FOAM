@@ -15,14 +15,13 @@
  - The case is expected to run for about 8 minutes
 
 
-## LCS Results
-
 ### Generation of the LCS results
  - The settings for the LCS function object can be found in the controlDict of this case
  - The LCS data will be stored in the `cfd2lcs_output` folder since your LCS write interval might not match with the write interval of your simulation
  - The data for forward and backward time FTLE fields will be named with the following pattern `fwdFTLE_<outputNumber>.dat` or the `bkwdFTLE_<outputNumber>.dat`
-    - The outputNumber of the different files is smaller than 0 if the lcsIntegrationTime has not yet been reached´. This means that this data represents preliminary results. After reaching the lcsIntegrationTime the output files will be labeled with positive numbers since the LCS function object is able to compute the flow map for the whole integration interval after that point.
+    - The outputNumber of the different files is smaller than 0 if the lcsIntegrationTime has not yet been reached. This means that this data represents preliminary results. After reaching the lcsIntegrationTime the output files will be labeled with positive numbers since the LCS function object is able to compute the flow map for the whole integration interval after that point.
     - As an example the file `fwdFTLE_0.dat` represents the forward time FTLE field at time "lcsStartTime + lcsIntegrationTime" and the file `fwdFTLE_1.dat` represents the forward time FTLE field at time "lcsStartTime + lcsIntegrationTime + 1 * lcsWriteTimeIntervall".
+    - There is a known bug that causes the numbering to not follow this pattern if the lcsStartTime is bigger than 0. However, the user can always check which file represents which time by checking the value of SOLUTIONTIME in the `*.dat` file 
 
 > **_NOTE:_**  For more information about the different time intervals that play a role in the LCS computations please refer to the associated paper (DOI: TBD).
 
