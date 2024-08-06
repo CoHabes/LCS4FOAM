@@ -19,24 +19,6 @@ Before starting the compilation a few prerequisites will be checked:
 
 #------------------------------------------------------------------------------
 
-# Check if fortran compiler is in place
-fortranVersions="gfortran gfortran-11"
-fortranLocation=`which $fortranVersions | sed  's/^/\t  /'`
-if command -v $fortranVersions &>/dev/null
-then
-    echo -e  "\t- ${GREEN}Fortran compiler is in place${NC}"
-    echo -e  "\t  Located under"
-    echo -e  "${fortranLocation}"
-
-else
-    echo -e  "\t- ${ORANGE}${fortranVersions} compiler not found."
-    echo -e  "\t  The compilation wont work without.${NC}"
-
-    echo -en  "Terminating compilation"
-    echo -e "\n\n"
-    exit
-fi
-
 # Check if mpif90 is in place
 mpifortranLocation=`which mpif90 | sed  's/^/\t  /'`
 if command -v mpif90 &>/dev/null
@@ -53,6 +35,61 @@ else
     echo -e "\n\n"
     exit
 fi
+
+# Check if fortran compiler is in place
+# - Get the fortran compiler that mpif90 links to
+fortranLocation=`mpif90 -v |& grep "COLLECT_GCC" | cut -d "=" -f 2`
+fortranVersion=`echo $fortranLocation | tr '/' '\n' | tail -n1`
+# - Compatible version that gfortran should link to is gfortran-11
+compatibleVersions="gfortran-11"
+compatibleLocations=`which $compatibleVersions | sed  's/^/\t  /'`
+
+if [ -z "$fortranLocation" ]
+then
+    errorMessgage=`mpif90 -v |& grep -E "MPI|gfortran" | sed  's/^/\t  /'`
+    neededCompiler=`echo $errorMessgage | grep -o ".fortran*"`
+
+    echo -e  "\t- ${ORANGE}Problem detected:"
+    echo -e  "${errorMessgage}"
+
+    if command -v $compatibleVersions &>/dev/null
+    then
+        echo -e  "\t  However, we found the compatible versions:"
+        echo -e  "\t  ${compatibleVersions}"
+        echo -e  "\t  Located under"
+        echo -e  "${compatibleLocations}"
+
+        echo -e  "\n\t To resolve the problem create a symlink that links "
+        echo -e  "\t ${neededCompiler} to ${compatibleVersions}${NC}"
+
+        echo -en  "Terminating compilation"
+        echo -e "\n\n"
+        exit
+    else
+        echo -e  "\t- ${ORANGE}We also could not find any compatible versions"
+        echo -e  "\t  ${compatibleVersions} that one could link to ${neededCompiler}"
+        echo -e  "\t  Please install ${compatibleVersions} first.${NC}"
+
+        echo -en  "Terminating compilation"
+        echo -e "\n\n"
+        exit
+    fi
+
+elif command -v $fortranVersion &>/dev/null
+then
+    echo -e  "\t- ${GREEN}Fortran compiler ${fortranVersion} is in place${NC}"
+    echo -e  "\t  Located under"
+    echo -e  "\t ${fortranLocation}"
+
+else
+    echo -e  "\t- ${ORANGE}${fortranVersion} compiler not found."
+    echo -e  "\t  The compilation wont work without.${NC}"
+
+    echo -en  "Terminating compilation"
+    echo -e "\n\n"
+    exit
+fi
+
 
 liblapackLocation=`dpkg -L liblapack-dev | grep "liblapack.so" \
                    | sed  's/^/\t  /'`
