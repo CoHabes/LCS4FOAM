@@ -17,7 +17,7 @@ FoamFile
 
 libs            (overset fvMotionSolvers);
 
-application icoOversetFoam;
+application     overPimpleDyMFoam;
 
 startFrom       startTime;
 
@@ -27,11 +27,11 @@ stopAt          endTime;
 
 endTime         150;
 
-deltaT          0.02;
+deltaT          0.001;
 
 writeControl    runTime;
 
-writeInterval   2;
+writeInterval   5;
 
 purgeWrite      0;
 
@@ -46,6 +46,12 @@ timeFormat      general;
 timePrecision   6;
 
 runTimeModifiable yes;
+
+adjustTimeStep  yes;
+
+maxCo           1;
+
+maxDeltaT       0.1;
 
 functions
 {
@@ -70,17 +76,14 @@ functions
         // Velocity field name
         velocityName "U";
 
-        // Start time of LCS diagnostic - (default: startTime of simulation)
+        // Simulation time after which the LCS computation should start - (default: simulation startTime)
         lcsStartTime 30;
 
-        // End time of LCS diagnostic - (default: endTime of simulation)
-        lcsEndTime 150;
-
-        // LCS integration time length
+         // LCS integration time length
         lcsIntegrationTime 16;
 
-        // LCS output interval in s
-        lcsWriteTimeIntervall 1;
+        // LCS output and flow map sub-step interval in s - (default: simulation write time intervall)
+        lcsSubStepWriteIntervall 1;
 
         // Switches for FTLE field evaluation
         // - Forward time (repelling) FTLE field - (default: true/on)
@@ -92,7 +95,7 @@ functions
         // - 0 LCS diagnostic will be computed on same grid (is default)
         // - 1, 2, ... Diagnostic will be computed on a grid with resolution times more grid points
         // - -1, -2, ... Diagnostic will be computed on a grid with resolution times less grid points
-        resolution 2;
+        resolution 4;
 
         lcsCFL          0.5;
 

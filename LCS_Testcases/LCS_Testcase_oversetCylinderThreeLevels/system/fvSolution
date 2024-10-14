@@ -30,7 +30,7 @@ solvers
         solver          PBiCGStab;
         preconditioner  DILU;
         tolerance       1e-6;
-        relTol          0;
+        relTol          0.01;
     }
 
 
@@ -53,18 +53,17 @@ solvers
         relTol          0;
     }
 
-    "(U|k|epsilon|omega)"
+    U
     {
         solver          smoothSolver;
         smoother        symGaussSeidel;
-        tolerance       1e-6;
-        relTol          0;
+        tolerance       1e-05;
+        relTol          0.1;
     }
 
-    "(U|k|epsilon|omega)Final"
+    UFinal
     {
         $U;
-        tolerance       1e-6;
         relTol          0;
     }
 

@@ -9,53 +9,34 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       dictionary;
-    object      fvSchemes;
+    class       pointVectorField;
+    object      pointDisplacement;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-ddtSchemes
-{
-    default         Euler;
-}
+dimensions      [0 1 0 0 0 0 0];
 
-gradSchemes
-{
-    default         Gauss linear;
-}
+internalField   uniform (0 0 0);
 
-divSchemes
+boundaryField
 {
-    default         Gauss linear;
+    overset
+    {
+        patchType       overset;
+        type            zeroGradient;
+    }
 
-    div((nuEff*dev(T(grad(U))))) Gauss linear;
-}
+    walls
+    {
+        type            uniformFixedValue;
+        uniformValue    (0 0 0);
+    }
 
-laplacianSchemes
-{
-    default         Gauss linear corrected;
-}
-
-interpolationSchemes
-{
-    default         linear;
-}
-
-snGradSchemes
-{
-    default         corrected;
-}
-
-oversetInterpolation
-{
-    method          inverseDistance;
-}
-
-fluxRequired
-{
-    default         no;
-    pcorr           ;
-    p               ;
+    ".*"
+    {
+        type            uniformFixedValue;
+        uniformValue    (0 0 0);
+    }
 }
 
 

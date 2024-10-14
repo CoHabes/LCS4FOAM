@@ -17,5 +17,5 @@ runApplication setFields
 runApplication overPotentialFoam -noFunctionObjects -writep
 
 # Run in parallel
-runApplication decomposePar -cellDist
+runApplication decomposePar
 mpirun -np 2 -oversubscribe $application -parallel > log.$application

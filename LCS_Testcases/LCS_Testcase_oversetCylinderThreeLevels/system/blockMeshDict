@@ -52,12 +52,12 @@ vertices
 
     // Refine box
     (-10 -10 -0.5)
-    ( 27 -10 -0.5)
-    ( 27  10 -0.5)
+    ( 29 -10 -0.5)
+    ( 29  10 -0.5)
     (-10  10 -0.5)
     (-10 -10 0.5)
-    ( 27 -10 0.5)
-    ( 27  10 0.5)
+    ( 29 -10 0.5)
+    ( 29  10 0.5)
     (-10  10 0.5)
 
 );
@@ -68,13 +68,13 @@ blocks
     hex (0 1 2 3 4 5 6 7) background (100 80 1) simpleGrading (1 1 1)
 
     // Refine box
-    hex (24 25 26 27 28 29 30 31) refine (148 80 1) simpleGrading (1 1 1)
+    hex (24 25 26 27 28 29 30 31) refine (100 60 1) simpleGrading (1 1 1)
 
     // Front
-    hex (8 12 13 9 16 20 21 17) front   (80 57 1) simpleGrading (34.8 1 1)
-    hex (9 13 14 10 17 21 22 18) front  (80 57 1) simpleGrading (34.8 1 1)
-    hex (10 14 15 11 18 22 23 19) front (80 57 1) simpleGrading (34.8 1 1)
-    hex (11 15 12 8 19 23 20 16) front  (80 57 1) simpleGrading (34.8 1 1)
+    hex (8 12 13 9 16 20 21 17) front   (33 22 1) simpleGrading (4 1 1)
+    hex (9 13 14 10 17 21 22 18) front  (33 22 1) simpleGrading (4 1 1)
+    hex (10 14 15 11 18 22 23 19) front (33 22 1) simpleGrading (4 1 1)
+    hex (11 15 12 8 19 23 20 16) front  (33 22 1) simpleGrading (4 1 1)
 
 );
 
